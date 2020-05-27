@@ -20,11 +20,22 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew clean build
+    - name: Upload build files.
+      uses: actions/upload-artifact@v1
+      with:
+        name: build
+        path: ./build
       
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Download build files from build
+      uses: actions/download-artifact@v1
+      with:
+        name: build
+    - name: Create build/dependency directory
+      run: mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
     - name: Login to Heroku Container registry
       env: 
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
