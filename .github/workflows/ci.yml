@@ -28,6 +28,7 @@ jobs:
       
   deploy:
     runs-on: ubuntu-latest
+    needs: [build]
     steps:
     - uses: actions/checkout@v1
     - name: Download build files from build
