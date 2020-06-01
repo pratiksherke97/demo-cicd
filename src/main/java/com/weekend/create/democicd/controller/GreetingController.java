@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class GreetingController {
 
   private static final String TEMPLATE = "Hello, %s!";
+
   private final AtomicLong counter = new AtomicLong();
 
   @GetMapping("/greeting")
