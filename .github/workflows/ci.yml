@@ -1,7 +1,7 @@
 # This workflow will build a Java project with Gradle
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Java CI with Gradle
+name: CI Workflow
 
 on:
   push:
@@ -9,9 +9,7 @@ on:
   
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
@@ -20,9 +18,35 @@ jobs:
         java-version: 1.8
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Clean with Gradle
-      run: ./gradlew clean  
     - name: Build with Gradle
-      run: ./gradlew build
-    - name: Test with gradle
-      run: ./gradlew test  
+      run: ./gradlew clean build
+    - name: Upload build files.
+      uses: actions/upload-artifact@v1
+      with:
+        name: build
+        path: ./build
+      
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download build files from build
+      uses: actions/download-artifact@v1
+      with:
+        name: build
+    - name: Create build/dependency directory
+      run: mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+    - name: Login to Heroku Container registry
+      env: 
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:login 
+    - name: Build and push container
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web 
+    - name: Release
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web 
+  
